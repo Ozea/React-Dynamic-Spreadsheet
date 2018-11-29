@@ -2,7 +2,7 @@ import React from 'react';
 
 import '../CreateTable/CreateTable.css';
 
-const createTable = (props) => {
+const CreateTable = (props) => {
   return(
     <div>
       <button 
@@ -14,4 +14,4 @@ const createTable = (props) => {
   );
 }
 
-export default createTable;
+export default CreateTable;

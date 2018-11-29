@@ -1,11 +1,11 @@
 import React from 'react';
 
-const input = (props) => {
+const Input = (props) => {
   return(
-    <div>
+    <div className="myInput">
       <input
-        id="title"
-        className={props.class}
+        className="form-control"
+        placeholder="Name"
         ref={props.reference}
         value={props.val}
         onChange={props.inputChanged} />
@@ -13,4 +13,4 @@ const input = (props) => {
   );
 }
 
-export default input;
+export default Input;
