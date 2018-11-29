@@ -1,23 +1,23 @@
 import React, { Component } from 'react';
 
 import '../../containers/App.css';
-import BlockControl from '../BlockControl/BlockControl';
 import Header from '../../components/Table/Header/Header';
 import Row from '../../components/Table/Row/Row';
+import AddRows from '../../components/BlockControl/Buttons/AddRows/AddRows';
+import AddColumn from '../../components/BlockControl/Buttons/AddColumn/AddColumn';
+import Input from '../../components/BlockControl/Input/Input';
+import Select from '../../components/BlockControl/Select/Select';
+import CheckBox from '../../components/BlockControl/Buttons/Checkbox/Checkbox';
 
-// const cellTypes = [ 'text', 'number', 'date', 'select' ];
 class Table extends Component {
   constructor(props){
     super(props);
     this.state = {
-      input: '',
-      select: 'Date',
       columns : [
-        {id: 0, name: '#', contentEditable: false, type: ''},
+        {id: 0, name: '#', contentEditable: false, type: '' , required: false},
       ],
       rows:[]
     }
-
     window.table = this;
   }
 
@@ -28,42 +28,27 @@ class Table extends Component {
       input: input.length === 0,
     });
 
-  inputChangeHandler = (evt) => {
-    this.setState({
-      input: evt.target.value
-    });
-  }
-
-  selectChangeHandler = (evt) => {
-    this.setState({
-      select: evt.target.value
-    });
-  }
-
-  componentDidMount() {
-    this.inputELement.focus();
-  }
-
   addColumn = () => {
     let columns = this.state.columns;
     let columnId = this.columnId++;
     let rows = this.state.rows;
+
     columns.push({
         id: columnId,
         name: this.inputELement.value,
         contentEditable: true,
-        type: this.state.select
+        type: this.props.selectValue,
+        required: this.checkBox.checked
       });
     
-    rows = rows.map((row) => {   
-      debugger;   
+    rows = rows.map((row) => {  
       row.cells.push({
         id: columnId,
         value: '',
-        type: this.state.select,
+        type: this.props.selectValue,
         contentEditable: true,
+        required: this.checkBox.checked,
       });
-
       return row;
     });
 
@@ -71,7 +56,7 @@ class Table extends Component {
 
   }
 
-  add10Rows = () => {        
+  add10Rows = () => {  
     for(let k = 0; k < 10; k++){
 
       let rowId = this.rowId++;
@@ -90,6 +75,7 @@ class Table extends Component {
         value: cell.id === 0 ? rowId : '',
         type: cell.type,
         contentEditable: cell.id !== 0,
+        required: cell.required,
       };
     })
   }
@@ -98,23 +84,37 @@ class Table extends Component {
     return(
       <tbody>
         {this.state.rows.map((row) => 
-        <Row key={row.id} cells={row.cells}  handleChange={this.handleRowChange} />)}
+        <Row id={row.id} key={row.id} cells={row.cells}  handleChange={this.handleRowChange} />)}
       </tbody>)
   }
 
   columns = () => {
+    const errors = this.validate(this.props.inputValue);
+    const isDisabled = Object.keys(errors).some(x => errors[x]);
     return(
       <thead>
         <tr>
           {this.state.columns.map((col) => 
-          <Header title={col.name} editable={col.contentEditable} key={col.id} />)}
+          <Header id={col.id} name={col.name} editable={col.contentEditable} key={col.id} required={col.required} handleChange={this.handleColumnChange}/>)}
+          <th className="input-group">
+            <Input
+              reference={(inp) => {this.inputELement = inp}}
+              val={this.props.inputValue}
+              inputChanged={this.props.inputChanged} />
+            <Select
+              val={this.props.selectValue}
+              selectRef={(sel) => {this.selectElement = sel}}
+              selectChanged={this.props.selectChanged} />
+            <CheckBox reference={(check) => {this.checkBox = check}} />
+            <AddColumn clicked={this.addColumn} isDisabled={isDisabled} />
+          </th>
         </tr>
-      </thead>)
-  }
+      </thead>
+      )}
 
   handleRowChange = (incomingRow) => {
     const { rows } = this.state;
-
+    const storage = localStorage.setItem('Columns', JSON.stringify(this.state.columns));
     const updatedRows = rows.reduce((acc, row) => {
       let updatedRow = { ...row };
 
@@ -125,33 +125,38 @@ class Table extends Component {
       return [ ...acc, updatedRow ];
     }, []);
 
-    this.setState({ rows: updatedRows });
+    this.setState({ rows: updatedRows, storage });
+  }
+
+  handleColumnChange = (id, newValue) => {
+    const storage = localStorage.setItem('Rows', JSON.stringify(this.state.rows));
+    const columns = this.state.columns.map((col) => {
+      if (col.id === id){
+        return { ...this.state.columns[id], name: newValue };
+      }
+      return { ...col };
+    });
+
+    this.setState({ ...this.state, columns, storage });
   }
 
   render(){
-  const errors = this.validate(this.state.input);
-  const isDisabled = Object.keys(errors).some(x => errors[x]);
   const rows = this.state.rows;
   const columns = this.state.columns;
   return(
     <div>
-      <BlockControl 
-        isDisabled={isDisabled}
-        errorClass={errors.input ? "error " : " "}
-        stateInput={this.state.input}
-        stateSelect={this.state.select}
-        inputChanged={this.inputChangeHandler}
-        selectChanged={this.selectChangeHandler}
-        inputRef={(inp) => {this.inputELement = inp}}
-        selectRef={(sel) => {this.selectElement = sel}}
-        addColumn={this.addColumn}
-        add10Rows={this.add10Rows} />
       <hr/>
-      {this.state.columns.length > 1 &&(
+      {this.props.show && (
+        <div>
         <table>
           {this.columns(columns)}
           {this.rows(rows)}
-        </table>)}
+        </table>
+        <AddRows 
+          clicked={this.add10Rows}
+          isDisabled={this.state.columns.length < 2} />
+        </div>
+      )}
     </div>
     );
   }
