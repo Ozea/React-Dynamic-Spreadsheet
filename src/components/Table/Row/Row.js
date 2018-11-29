@@ -1,49 +1,44 @@
 import React, { Component } from 'react';
 
+import Cell from '../Cells/Cell';
 import PropTypes from 'prop-types';
 
 class Row extends Component {
-  constructor(props){
-    super(props);
-    this.state = {
-      cells: []
-    }
-  }
-
   static propTypes = {
-    id: PropTypes.number,
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     cells: PropTypes.array,
     handleChange: PropTypes.func.isRequired,
+    required: PropTypes.bool,
   }
 
-  handleChange = (id) => {
-    return (value) => {
-      const { id, cells, handleChange } = this.props;
-      const updatedCells = cells.reduce((acc, cell) => {
-        let newCell = { ...cell };
+  handleChange = (cid, value) => {
+    const { id, cells, handleChange } = this.props;
+    const updatedCells = cells.reduce((acc, cell) => {
+      let newCell = { ...cell };
 
-        if (newCell.id === id ) {
-          newCell.value = value;
-        }
+      if (newCell.id === cid ) {
+        newCell.value = value;
+      }
 
-        return [...acc, newCell];
-      }, []);
+      return [...acc, newCell];
+    }, []);
 
-      handleChange({
-        id,
-        cells: updatedCells,
-      })
-    }
+    handleChange({
+      id,
+      cells: updatedCells,
+    })
   }
 
   cells = () => {
     return this.props.cells.map((c) => 
       (<Cell
+        id={c.id}
         key={c.id}
         value={c.value}
         type={c.type}
         contentEditable={c.contentEditable}
-        handleChange={this.handleChange(c.id)} 
+        handleChange={this.handleChange}
+        required={c.required}
       />)
     )
   }
@@ -53,48 +48,6 @@ class Row extends Component {
       <tr>
         {this.cells()}
       </tr>
-    )
-  }
-}
-
-class Cell extends Component {
-  static propTypes = {
-    value: PropTypes.string,
-    contentEditable: PropTypes.bool,
-    type: PropTypes.string,
-    handleChange: PropTypes.func.isRequired,
-  }
-
-  // validate() {
-  //     const {type, required} = this.props;
-
-  //     return result;
-  // }
-
-  // className() {
-  //     const isValid = this.validate();
-  //     return !isValid ? 'error' : '';
-  // }
-
-  onChange = (event) => {
-    this.props.handleChange(event.target.value);
-  }
-
-  content() {
-    const { contentEditable, type, value } = this.props;
-
-    if (contentEditable) {
-      return <input className="input" type={type} defaultValue={value} onBlur={this.onChange}></input>
-    }
-
-    return <span> {value} </span>;
-  }
-
-  render() {
-    return (
-      <td className="newCell">
-        {this.content()}
-      </td>
     )
   }
 }
