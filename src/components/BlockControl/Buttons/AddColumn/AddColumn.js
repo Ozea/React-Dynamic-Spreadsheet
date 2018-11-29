@@ -1,18 +1,16 @@
 import React from 'react';
 
-import './AddColumn.css';
-
-const addColumn = (props) => {
+const AddColumn = (props) => {
   return(
-    <div>
+    <div className="input-group-append">
       <button
         disabled={props.isDisabled} 
-        className="addColumnPos btn btn-primary" 
+        className="btn btn-outline-primary" 
         onClick={props.clicked}>
-        Add column
+        <i className="glyphicon glyphicon-plus"></i>
       </button>
     </div>
   );
 }
 
-export default addColumn;
+export default AddColumn;
